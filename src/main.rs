@@ -1,36 +1,37 @@
-use std::{thread::{self, JoinHandle}, time::{self, Duration}, net::{IpAddr, SocketAddr, ToSocketAddrs}};
-use tokio::{self};
+use std::{thread::{self}, vec};
 use pinger::{ping,PingResult};
 
-
 fn main() {
-    tokio::runtime::Builder::new_multi_thread()
-    .enable_all()
-    .build()
-    .unwrap()
-    .block_on(async {
-    for j in 0..10 {
-        let x = thread::spawn( move || init_scan(j));
-        x.join().expect("shush").await;
+    let mut u = vec![];
+    let mut l = 0;
+    for j in 0..255 {
+        let x = thread::spawn( move || init_scan(j,&mut l));
+        u.push(x);
     };
-})
+    for i in u{
+        i.join().unwrap();
+    }
+    println!("{}",l);
 }
 
-async fn init_scan(i:i32){
-    let _socket_addresses: Vec<SocketAddr> = format!("172.27.72.73:0").to_socket_addrs().unwrap().collect();
-    scan_port(format!("1.1.1.{i}").to_string()).await;
+fn init_scan(i:i32,l:&mut i32){
+    if scan_ip(format!("192.168.32.{i}").to_string()){
+        *l += 1;
+    };
 }
 
-async fn scan_port(target: String) {
+fn scan_ip(target: String) -> bool{
+    let mut alive = false;
     let u : Option<String> = Default::default();
-    let stream = ping(target,u).expect("Error pinging");
+    let stream = ping(target.clone(),u).expect("Error pinging");
     for message in stream {
         match message {
-            PingResult::Pong(duration, _) => {println!("{:?}", duration);break;},
-            PingResult::Timeout(_) => {println!("Timeout!");break;},
+            PingResult::Pong(duration, _) => {println!("{:?} {}", duration, target);alive = true;break;},
+            PingResult::Timeout(_) => {println!("Timeout! {target}");break;},
             // Unknown lines, just ignore.
             PingResult::Unknown(_line) => (),
             PingResult::PingExited(_, _) => println!("ping exited"),
         }
     }
+    return alive;
 }
