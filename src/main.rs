@@ -2,28 +2,29 @@ use std::{thread::{self}, vec};
 use pinger::{ping,PingResult};
 
 fn main() {
-    let mut u = vec![];
-    let mut l = 0;
+    let mut handles = vec![];
+    let mut alive = 0;
     for j in 0..255 {
-        let x = thread::spawn( move || init_scan(j,&mut l));
-        u.push(x);
+        let handle = thread::spawn( move || init_scan(j));
+        handles.push(handle);
     };
-    for i in u{
-        i.join().unwrap();
+    for i in handles{
+        alive += i.join().unwrap();
     }
-    println!("{}",l);
+    println!("Total {} alive out of 255!",alive);
 }
 
-fn init_scan(i:i32,l:&mut i32){
+fn init_scan(i:i32) -> i32{
     if scan_ip(format!("192.168.32.{i}").to_string()){
-        *l += 1;
+        return 1;
     };
+    return 0;
 }
 
 fn scan_ip(target: String) -> bool{
     let mut alive = false;
-    let u : Option<String> = Default::default();
-    let stream = ping(target.clone(),u).expect("Error pinging");
+    let interface : Option<String> = Default::default();
+    let stream = ping(target.clone(),interface).expect("Error pinging");
     for message in stream {
         match message {
             PingResult::Pong(duration, _) => {println!("{:?} {}", duration, target);alive = true;break;},
