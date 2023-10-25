@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 pinger = "0.13.0"
+regex = "1.10.2"
 tokio = { version = "1.33.0", features = ["full"] }

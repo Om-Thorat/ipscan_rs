@@ -1,6 +1,7 @@
 use std::{thread::{self}, vec};
 use pinger::{ping,PingResult};
 use clap::Parser;
+use regex::Regex;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -9,11 +10,17 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
+    // Regex god truly
+    let regip = Regex::new(r"^(([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}$").unwrap();
+    if !regip.is_match(&args.ip){
+        // play with strings in rust but i kinda don't wannaaaaaa
+        panic!("So close <3 but i dont't want a valid IP, Input one without the 4th byte (eg. 192.168.2.");
+    }
     let mut handles = vec![];
     let mut alive = 0;
     for j in 0..255 {
         let a = args.ip.clone();
-        let handle = thread::spawn( move || init_scan(format!("{a}.{j}").to_string()));
+        let handle = thread::spawn( move || init_scan(format!("{a}{j}").to_string()));
         handles.push(handle);
     };
     for i in handles{
