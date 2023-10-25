@@ -1,11 +1,19 @@
 use std::{thread::{self}, vec};
 use pinger::{ping,PingResult};
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+struct Cli {
+    ip: String,
+}
 
 fn main() {
+    let args = Cli::parse();
     let mut handles = vec![];
     let mut alive = 0;
     for j in 0..255 {
-        let handle = thread::spawn( move || init_scan(j));
+        let a = args.ip.clone();
+        let handle = thread::spawn( move || init_scan(format!("{a}.{j}").to_string()));
         handles.push(handle);
     };
     for i in handles{
@@ -14,8 +22,8 @@ fn main() {
     println!("Total {} alive out of 255!",alive);
 }
 
-fn init_scan(i:i32) -> i32{
-    if scan_ip(format!("192.168.32.{i}").to_string()){
+fn init_scan(i:String) -> i32{
+    if scan_ip(i){
         return 1;
     };
     return 0;
